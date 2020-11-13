@@ -113,7 +113,7 @@ Confirm by pressing Enter.
             df2 = pd.read_excel('./output/result_table.xlsx')
             df2 = df2[df2['dispensability']<0.7]
             df2 = df2.sort_values(['p-value'])
-            df.to_excel('./output/result_table_reduced_by_REVIGO.xlsx', header=True, index=False)
+            df2.to_excel('./output/result_table_reduced_by_REVIGO.xlsx', header=True, index=False)
 
     finally:
         driver.quit()
