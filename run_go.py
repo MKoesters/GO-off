@@ -89,7 +89,7 @@ Confirm by pressing Enter.
             driver.find_element_by_partial_link_text('Visualize output in REViGO').click()
             second = driver.window_handles[1]
             driver.switch_to.window(second)
-            time.sleep(5)
+            time.sleep(10)
             database = Select(driver.find_element_by_xpath(
                 '/html/body/div[1]/div[4]/form/select'))
             database.select_by_visible_text(
