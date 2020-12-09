@@ -2,6 +2,7 @@
 
 This is a simple Python script to get GO enrichment results from GORILLA and REVIGO (with default settings).
 
+<pre>
 Notes:
 geckodriver operates firefox browser, so you have to install Firefox browser before running this script
 Please run it only with Windows 10, and in case it is not working, please let me know
@@ -17,3 +18,4 @@ Expected outputs (saved in foled "output") are:
         GO RESULTS = most important file - contains REVIGO-reduced GO IDs and GORILLA-counted numbers (enrichment, ...)
 This script can be run multiple times in a loop, but keep in mind that the content in folder "output" is overwritten every time
 //this is just my spaghetti code... if you do not understand any part, please ask me
+</pre>
