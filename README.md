@@ -10,7 +10,7 @@ Expected inputs are text (.txt) lists with Arabidopsis gene IDs separated by new
 Expected outputs (saved in foled "output") are:
     one text (.txt) list with Arabidopsis gene IDs coming from user-defined merge (see instructions during running the script)
     two screenshot (.png) images from GORILLA and REVIGO webpages
-    six excel tables: 
+    excel tables: 
         GORILLA table with calculated enrichment, etc.
         GORILLA gene IDs extracted from GORILLA table GO categories
         REVIGO table
