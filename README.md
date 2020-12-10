@@ -1,7 +1,7 @@
 <h1>
     GO-off
 </h1>
-<h3>This is a Python script for running GORILLA (http://cbl-gorilla.cs.technion.ac.il/) and REVIGO (http://revigo.irb.hr/index.jsp) online tools (with default settings) to perform GO enrichment on datasets of Arabidopsis thaliana gene IDs.</h3>
+<h3>This is a Python script for automation of steps for running GORILLA (http://cbl-gorilla.cs.technion.ac.il/) and REVIGO (http://revigo.irb.hr/index.jsp) online tools (with default settings) to perform GO enrichment on datasets of Arabidopsis thaliana gene IDs.</h3>
 
 <pre>
 Notes:
