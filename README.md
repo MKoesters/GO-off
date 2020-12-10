@@ -12,7 +12,8 @@ I apologize for my spaghetti code...
 Please ask me, if you do not understand any part of the script.
 
 
-Expected input dataset is a text file (located in the folder with script) containing gene IDs separated by newlines 
+Expected input dataset is a text file (located in the folder with script) containing gene IDs separated by newlines.
+    As an example of input data, I provided two datasets (dataset_1 and dataset_2). Reference dataset cannot be replaced.
 Expected outputs (saved in foled "output") are:
     text (.txt) file of Arabidopsis gene IDs dataset used for GO analysis (parentheses of the file name shoe the number of IDs)
     two screenshot (.png) images from GORILLA and REVIGO webpages
