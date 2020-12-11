@@ -107,64 +107,64 @@ while True:
                             driver.find_element_by_partial_link_text('Show genes').click()
                     except:
                         break
-                    g_table = pd.read_html(driver.find_element_by_xpath('//*[@id="table1"]').get_attribute('outerHTML'))[0]
-                    g_df =pd.DataFrame(
-                        {'GO IDs': g_table.iloc[1:, 0],
-                         'Description': g_table.iloc[1:, 1],
-                         'Enrichment': g_table.iloc[1:, 4],
-                         'Genes': g_table.iloc[1:, 5]})
-                    g_df.to_excel('./output/GORILLA_table.xlsx', header=True, index=False)
+                g_table = pd.read_html(driver.find_element_by_xpath('//*[@id="table1"]').get_attribute('outerHTML'))[0]
+                g_df =pd.DataFrame(
+                    {'GO IDs': g_table.iloc[1:, 0],
+                     'Description': g_table.iloc[1:, 1],
+                     'Enrichment': g_table.iloc[1:, 4],
+                     'Genes': g_table.iloc[1:, 5]})
+                g_df.to_excel('./output/GORILLA_table.xlsx', header=True, index=False)
+                time.sleep(5)
+                driver.find_element_by_tag_name('img').screenshot('./output/screenshot_GORILLA.png')
+                driver.find_element_by_partial_link_text('Visualize output in REViGO').click()
+                second = driver.window_handles[1]
+                driver.switch_to.window(second)
+                time.sleep(10)
+                if 'REVIGO error page' in driver.page_source:
+                    driver.quit()
+                    print('REVIGO is not available now.')
+                else:
+                    database = Select(driver.find_element_by_xpath('/html/body/div[1]/div[4]/form/select'))
+                    database.select_by_visible_text('Arabidopsis thaliana')
+                    driver.find_element_by_xpath('/html/body/div[1]/div[4]/form/p[5]/input').click()
+                    driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/form/table/tbody/tr[1]/td[1]/a').click()
+                    wait_table = ww(driver, 10).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div[1]/div[2]/form/table')))
+                    wait_table.screenshot('./output/screenshot_REVIGO.png')
+                    get_table = pd.read_html(driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/form/table').get_attribute('outerHTML'))[0]
+                    rev_df = pd.DataFrame(
+                        {'GO IDs': get_table.iloc[2:,0],
+                         'GO names': get_table.iloc[2:,1],
+                         'p-value': (get_table.iloc[2:,4]).astype(float),
+                         'dispensability': (get_table.iloc[2:,6]).astype(float)})
+                    rev_df.to_excel('./output/REVIGO_table.xlsx', header=True, index=False)
                     time.sleep(5)
-                    driver.find_element_by_tag_name('img').screenshot('./output/screenshot_GORILLA.png')
-                    driver.find_element_by_partial_link_text('Visualize output in REViGO').click()
-                    second = driver.window_handles[1]
-                    driver.switch_to.window(second)
-                    time.sleep(10)
-                    if 'REVIGO error page' in driver.page_source:
-                        driver.quit()
-                        print('REVIGO is not available now.')
-                    else:
-                        database = Select(driver.find_element_by_xpath('/html/body/div[1]/div[4]/form/select'))
-                        database.select_by_visible_text('Arabidopsis thaliana')
-                        driver.find_element_by_xpath('/html/body/div[1]/div[4]/form/p[5]/input').click()
-                        driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/form/table/tbody/tr[1]/td[1]/a').click()
-                        wait_table = ww(driver, 10).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div[1]/div[2]/form/table')))
-                        wait_table.screenshot('./output/screenshot_REVIGO.png')
-                        get_table = pd.read_html(driver.find_element_by_xpath('/html/body/div[1]/div[1]/div[2]/form/table').get_attribute('outerHTML'))[0]
-                        rev_df = pd.DataFrame(
-                            {'GO IDs': get_table.iloc[2:,0],
-                             'GO names': get_table.iloc[2:,1],
-                             'p-value': (get_table.iloc[2:,4]).astype(float),
-                             'dispensability': (get_table.iloc[2:,6]).astype(float)})
-                        rev_df.to_excel('./output/REVIGO_table.xlsx', header=True, index=False)
-                        time.sleep(5)
-                        rev_df2 = pd.read_excel('./output/revigo_table.xlsx')
-                        rev_df2 = rev_df2[rev_df2['dispensability']<0.7]
-                        rev_df2 = rev_df2.sort_values(['p-value'])
-                        rev_df2.to_excel('./output/REVIGO_table_reduced.xlsx', header=True, index=False)
+                    rev_df2 = pd.read_excel('./output/revigo_table.xlsx')
+                    rev_df2 = rev_df2[rev_df2['dispensability']<0.7]
+                    rev_df2 = rev_df2.sort_values(['p-value'])
+                    rev_df2.to_excel('./output/REVIGO_table_reduced.xlsx', header=True, index=False)
 
-                        g_df['Numbers'] = g_df['Enrichment'].map(lambda x: x.split(' ')[1].replace('(','').replace(')','').split(','))
-                        gene_ids_list = []
-                        for row in g_df['Genes']:
-                                row = row.split(' ')
-                                gene_ids = []
-                                for word in row:
-                                        if re.findall(r'AT.G.....', word):
-                                                gene_ids.append(word)
-                                gene_ids_list.append(gene_ids)
-                        g_df2 = pd.DataFrame()
-                        g_df2['GO IDs'] = g_df['GO IDs']
-                        g_df2['Description'] = g_df['Description']
-                        g_df2['Enrichment'] = g_df['Enrichment'].map(lambda x: x.split(' ')[0]).astype('float')
-                        g_df2['Total number of reference genes'] = g_df['Numbers'].map(lambda x: x[0]).astype('float')
-                        g_df2['Number of reference genes assoc. with the GO'] = g_df['Numbers'].map(lambda x: x[1]).astype('float')
-                        g_df2['Number of input dataset genes assoc. with the GO'] = g_df['Numbers'].map(lambda x: x[3]).astype('float')
-                        g_df2.to_excel('output/GORILLA_table.xlsx', index=None)
-                        g_df3 = pd.DataFrame(gene_ids_list).transpose()
-                        g_df3.to_excel('output/GORILLA_gene_IDs.xlsx', header=g_df2['GO IDs'].values, index=None)
-                        merge = rev_df2.iloc[:,[0]].merge(g_df2.iloc[:,[0, 1, 2, 4, 5]], on='GO IDs', sort=False, how='inner').dropna()
-                        sorted_merge = merge.sort_values(['Enrichment'], ascending=False)
-                        sorted_merge.to_excel('output/GO_RESULTS.xlsx', index=None)
+                    g_df['Numbers'] = g_df['Enrichment'].map(lambda x: x.split(' ')[1].replace('(','').replace(')','').split(','))
+                    gene_ids_list = []
+                    for row in g_df['Genes']:
+                            row = row.split(' ')
+                            gene_ids = []
+                            for word in row:
+                                    if re.findall(r'AT.G.....', word):
+                                            gene_ids.append(word)
+                            gene_ids_list.append(gene_ids)
+                    g_df2 = pd.DataFrame()
+                    g_df2['GO IDs'] = g_df['GO IDs']
+                    g_df2['Description'] = g_df['Description']
+                    g_df2['Enrichment'] = g_df['Enrichment'].map(lambda x: x.split(' ')[0]).astype('float')
+                    g_df2['Total number of reference genes'] = g_df['Numbers'].map(lambda x: x[0]).astype('float')
+                    g_df2['Number of reference genes assoc. with the GO'] = g_df['Numbers'].map(lambda x: x[1]).astype('float')
+                    g_df2['Number of input dataset genes assoc. with the GO'] = g_df['Numbers'].map(lambda x: x[3]).astype('float')
+                    g_df2.to_excel('output/GORILLA_table.xlsx', index=None)
+                    g_df3 = pd.DataFrame(gene_ids_list).transpose()
+                    g_df3.to_excel('output/GORILLA_gene_IDs.xlsx', header=g_df2['GO IDs'].values, index=None)
+                    merge = rev_df2.iloc[:,[0]].merge(g_df2.iloc[:,[0, 1, 2, 4, 5]], on='GO IDs', sort=False, how='inner').dropna()
+                    sorted_merge = merge.sort_values(['Enrichment'], ascending=False)
+                    sorted_merge.to_excel('output/GO_RESULTS.xlsx', index=None)
             driver.quit()
         except:
             print('Sorry, something went wrong. Please try again.')
