@@ -162,7 +162,7 @@ while True:
                         g_df2.to_excel('output/GORILLA_table.xlsx', index=None)
                         g_df3 = pd.DataFrame(gene_ids_list).transpose()
                         g_df3.to_excel('output/GORILLA_gene_IDs.xlsx', header=g_df2['GO IDs'].values, index=None)
-                        merge = rev_df2.iloc[:,[0,2]].merge(g_df2, on='GO IDs', sort=False, how='inner').dropna()
+                        merge = rev_df2.iloc[:,[0]].merge(g_df2.iloc[:,[0, 1, 2, 4, 5]], on='GO IDs', sort=False, how='inner').dropna()
                         sorted_merge = merge.sort_values(['Enrichment'], ascending=False)
                         sorted_merge.to_excel('output/GO_RESULTS.xlsx', index=None)
             driver.quit()
@@ -175,4 +175,3 @@ while True:
                 sys.exit()
             else:
                 continue
-
