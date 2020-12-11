@@ -158,7 +158,7 @@ while True:
                         g_df2['Enrichment'] = g_df['Enrichment'].map(lambda x: x.split(' ')[0]).astype('float')
                         g_df2['Total number of genes'] = g_df['Numbers'].map(lambda x: x[0]).astype('float')
                         g_df2['Total number of genes assoc. with a specific GO term'] = g_df['Numbers'].map(lambda x: x[1]).astype('float')
-                        g_df2['Number of input genes in a specific GO'] = g_df['Numbers'].map(lambda x: x[3]).astype('float')
+                        g_df2['Number of input genes inside a specific GO'] = g_df['Numbers'].map(lambda x: x[3]).astype('float')
                         g_df2.to_excel('output/GORILLA_table.xlsx', index=None)
                         g_df3 = pd.DataFrame(gene_ids_list).transpose()
                         g_df3.to_excel('output/GORILLA_gene_IDs.xlsx', header=g_df2['GO IDs'].values, index=None)
