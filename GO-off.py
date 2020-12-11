@@ -67,7 +67,7 @@ while True:
                 picked_file = picking_file()
                 out_file = set(open('output/'+os.listdir("output/")[0]).read().splitlines())
                 try:
-                    merged_file = merging(picked_file, out_file)
+                    merged_file = merging(out_file, picked_file)
                     new_dir()
                     saving_file(merged_file)
                 except:
