@@ -1,5 +1,8 @@
 import os, sys, time, re
 from shutil import rmtree
+import requests
+
+from loguru import logger
 
 import click
 
@@ -31,7 +34,7 @@ def saving_file(file_to_save):
     with open(f"output/dataset_{len(file_to_save)}.txt", "w") as to_save:
         for item in sorted(file_to_save):
             to_save.write(str(item) + "\n")
-    print(
+    logger.info(
         f'You have succesfully created new dataset: {os.listdir("output/")[0]} in output folder.'
     )
 
@@ -39,11 +42,100 @@ def saving_file(file_to_save):
 @click.command()
 @click.argument("input_file")
 @click.argument("background")
-@click.option("--output_folder", default="Gorilla_out")
-@click.option("--organism", default="Mus musculus")
-@click.option("--ontology", default="Process")
-@click.option("--revigo_list_length", default="medium")
-@click.option("--no_headless", is_flag=True, default=True)
+@click.option(
+    "--output_folder",
+    default="Gorilla_out",
+    help="Output folder where files will be saved",
+)
+@click.option(
+    "--organism",
+    type=click.Choice(
+        [
+            "Homo sapiens",
+            "Mus musculus",
+            "Rattus norvegicus",
+            "Arabidopsis thaliana",
+            "Drosophila melanogaster",
+            "Saccharomyces cerevisae",
+            "Danio rerio",
+            "Caenorhabditis elegans",
+        ]
+    ),
+    default="Mus musculus",
+    help="Organism in which the genes were detected",
+)
+@click.option(
+    "--ontology",
+    type=click.Choice(
+        [
+            "Process",
+            "Function",
+            "Component",
+        ]
+    ),
+    default="Process",
+    help="Ontology type",
+)
+@click.option(
+    "--revigo_list_length",
+    type=click.Choice(
+        [
+            "Large",
+            "medium",
+            "small",
+            "tiny",
+        ]
+    ),
+    default="medium",
+    help="""
+REVIGO similarity filtering option
+
+Large=0.9,
+Medium=0.7,
+Small=0.5,
+Tiny=0.4
+""",
+)
+@click.option(
+    "--no_headless",
+    is_flag=True,
+    default=True,
+    help="When this flag is set, an browser window is opened. This is useful for debugging purposes",
+)
+def main_cli(
+    input_file,
+    background,
+    organism="Mus musculus",
+    output_folder=".",
+    ontology="Process",
+    revigo_list_length="medium",
+    no_headless=True,
+):
+    """Run Gorilla and Revigo analysis using selenium.
+
+    INPUT_FILE should be a file with enriched genes, one gene symbol per line
+    BACKGROUND shold be a file with background genes, one gene symbol per line
+
+    """
+    main(
+        input_file,
+        background,
+        organism="Mus musculus",
+        output_folder=".",
+        ontology="Process",
+        revigo_list_length="medium",
+        no_headless=True,
+    )
+
+
+# @click.command()
+# @click.argument("input_file")
+# @click.argument("background")
+# @click.option("--output_folder", default="Gorilla_out")
+# @click.option("--organism", default="Mus musculus")
+# @click.option("--ontology", default="Process")
+# @click.option("--revigo_list_length", default="medium")
+# @click.option("--no_headless", is_flag=True, default=True)
 def main(
     input_file,
     background,
@@ -54,9 +146,10 @@ def main(
     no_headless=True,
 ):
     if os.path.exists(output_folder):
-        answer = input('Folder already exists, overwriting? [y/n]')
-        if answer == 'n':
-            return
+        # answer = input("Folder already exists, overwriting? [y/n]: ")
+        # if answer == "n":
+        #     return
+        pass
     else:
         os.mkdir(output_folder)
     options = Options()
@@ -83,7 +176,9 @@ def main(
     ontology_selector.send_keys(Keys.SPACE)
 
     # currently only with background
-    mode_selector = driver.find_element_by_xpath('/html/body/form/blockquote[1]/table[2]/tbody/tr[2]/td/font[2]/input')
+    mode_selector = driver.find_element_by_xpath(
+        "/html/body/form/blockquote[1]/table[2]/tbody/tr[2]/td/font[2]/input"
+    )
     mode_selector.send_keys(Keys.SPACE)
 
     box1 = driver.find_element_by_xpath(
@@ -100,6 +195,7 @@ def main(
 
     # breakpoint()
     # run analysis
+    logger.info("Run Gorilla")
     driver.find_element_by_xpath("/html/body/form/blockquote[2]/p/font/input").click()
     time.sleep(10)
 
@@ -113,18 +209,18 @@ def main(
             "function": "/html/body/table/tbody/tr/td[3]/h2/a",
             "component": "/html/body/table/tbody/tr/td[5]/h2/a",
         }
-        while True:
-            try:
-                if "Show genes" not in driver.page_source:
-                    break
-                else:
-                    driver.find_element_by_partial_link_text("Show genes").click()
-            except Exception:
-                break
-        # breakpoint()
-        g_table = pd.read_html(
-            driver.find_element_by_xpath('//*[@id="table1"]').get_attribute("outerHTML")
-        )[0]
+        # while True:
+        #     try:
+        #         if "Show genes" not in driver.page_source:
+        #             break
+        #         else:
+        #             driver.find_element_by_partial_link_text("Show genes").click()
+        #     except Exception:
+        #         break
+        enrichment_table = ww(driver, 100).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="table1"]'))
+        )
+        g_table = pd.read_html(enrichment_table.get_attribute("outerHTML"))[0]
         g_df = pd.DataFrame(
             {
                 "GO IDs": g_table.iloc[1:, 0],
@@ -133,14 +229,16 @@ def main(
                 "Genes": g_table.iloc[1:, 5],
             }
         )
-        g_df.to_csv(f"./{output_folder}/GORILLA_table_{ontology}.csv", header=True, index=False)
+        g_df.to_csv(
+            f"./{output_folder}/GORILLA_table_{ontology}.csv", header=True, index=False
+        )
         time.sleep(10)
         driver.find_element_by_tag_name("img").screenshot(
             f"./{output_folder}/screenshot_GORILLA_{ontology}.png"
         )
 
-        # breakpoint()
         # run analysis
+        logger.info("Run REVIGO")
         driver.find_element_by_partial_link_text("Visualize output in REViGO").click()
         second = driver.window_handles[1]
         driver.switch_to.window(second)
@@ -156,16 +254,23 @@ def main(
             driver.find_element_by_xpath(
                 "/html/body/div[1]/div[4]/form/p[5]/input"
             ).click()
-            driver.find_element_by_xpath(
-                "/html/body/div[1]/div[1]/div[2]/form/table/tbody/tr[1]/td[1]/a"
+            ww(driver, 10).until(
+                EC.presence_of_element_located(
+                    (
+                        By.XPATH,
+                        "/html/body/div[1]/div[1]/div[2]/form/table/tbody/tr[1]/td[1]/a",
+                    )
+                )
             ).click()
-            wait_table = ww(driver, 10).until(
+            # driver.find_element_by_xpath(
+            #     "/html/body/div[1]/div[1]/div[2]/form/table/tbody/tr[1]/td[1]/a"
+            # ).click()
+            wait_table = ww(driver, 100).until(
                 EC.presence_of_element_located(
                     (By.XPATH, "/html/body/div[1]/div[1]/div[2]/form/table")
                 )
             )
-            # breakpoint()
-            wait_table.screenshot(f"./output/screenshot_REVIGO_{ontology}.png")
+            wait_table.screenshot(f"./{output_folder}/screenshot_REVIGO_{ontology}.png")
             get_table = pd.read_html(
                 driver.find_element_by_xpath(
                     "/html/body/div[1]/div[1]/div[2]/form/table"
@@ -179,13 +284,19 @@ def main(
                     "dispensability": (get_table.iloc[2:, 6]).astype(float),
                 }
             )
-            rev_df.to_csv(f"./{output_folder}/REVIGO_table_{ontology}.csv", header=True, index=False)
+            rev_df.to_csv(
+                f"./{output_folder}/REVIGO_table_{ontology}.csv",
+                header=True,
+                index=False,
+            )
             time.sleep(5)
             rev_df2 = pd.read_csv(f"./{output_folder}/REVIGO_table_{ontology}.csv")
             rev_df2 = rev_df2[rev_df2["dispensability"] < 0.7]
             rev_df2 = rev_df2.sort_values(["p-value"])
             rev_df2.to_csv(
-                f"./{output_folder}/REVIGO_table_{ontology}_reduced.csv", header=True, index=False
+                f"./{output_folder}/REVIGO_table_{ontology}_reduced.csv",
+                header=True,
+                index=False,
             )
 
             g_df["Numbers"] = g_df["Enrichment"].map(
@@ -229,9 +340,22 @@ def main(
                 .dropna()
             )
             sorted_merge = merge.sort_values(["Enrichment"], ascending=False)
-            sorted_merge.to_csv(f"{output_folder}/GO_RESULTS_{ontology}.csv", index=None)
+            sorted_merge.to_csv(
+                f"{output_folder}/GO_RESULTS_{ontology}.csv", index=None
+            )
+
+            # download Rscript
+            # breakpoint()
+            # url = driver.find_element_by_xpath(
+            #     "/html/body/div[1]/div[1]/div[2]/form/table/tbody/tr[1]/td[2]/a[2]"
+            # ).get_attribute("href")
+            # response = requests.get(url)
+            # with open(f"{output_folder}/RScript_{ontology}.R", "wt") as fout:
+            #     for line in response.content:
+            #         fout.write(line)
+            # breakpoint()
         driver.quit()
 
 
 if __name__ == "__main__":
-    main()
+    main_cli()
