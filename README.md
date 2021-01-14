@@ -13,10 +13,12 @@ Expected outputs (saved in foled "output") are:
         REVIGO reduced table (dispensability <= 0.7)
         GO RESULTS = contains REVIGO-reduced GO category IDs and counted numbers (enrichment, ...) </pre>
 
-<h3> Usage:
-    `GO-off` can be run by `python GO-off.py &lt;input_file&gt; &lt;background_file&gt;`
-    For help type `python GO-off.py --help`
-</h3>
+<h3> Usage: </h3>
+    GO-off can be run by 
+    <pre>python GO-off.py &lt;input_file&gt; &lt;background_file&gt;</pre>
+    For help type 
+    <pre>python GO-off.py --help</pre>
+
 <h3>Important notes:</h3><h4>The geckodriver operates Firefox browser, so you have to install this browser before running the script.
 Keep in mind that the content in folder "output" is overwritten with each iteration. </h4>
 <h3>Comments:</h3><h5>The aim of the last update is to give the user more freedom in selecting and merging user's input datasets.
