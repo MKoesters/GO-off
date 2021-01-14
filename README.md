@@ -13,6 +13,14 @@ Expected outputs (saved in foled "output") are:
         REVIGO reduced table (dispensability <= 0.7)
         GO RESULTS = contains REVIGO-reduced GO category IDs and counted numbers (enrichment, ...) </pre>
 
+<h3> Installation </h3>
+Clone the repo using 
+<pre>git clone https://github.com/konetom/GO-off.git</pre>
+Then install python requirements using
+<pre>pip install -r requirements</pre>
+
+If you want to use the script from anywhere, consider putting this directory in your PATH
+
 <h3> Usage: </h3>
     GO-off can be run by 
     <pre>python GO-off.py &lt;input_file&gt; &lt;background_file&gt;</pre>
